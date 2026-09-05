@@ -2976,15 +2976,18 @@ FMT_CONSTEXPR20 void format_hexfloat(Float value, format_specs specs,
   format_hexfloat(static_cast<double>(value), specs, buf);
 }
 
+// Stored as an integer array instead of a U"" literal because nvcc's
+// EDG front end rejects char32_t string literals with large values.
+inline constexpr uint32_t fractional_part_rounding_thresholds_data[] = {
+    0x9999999a, 0x828f5c29, 0x80418938, 0x80068db9,
+    0x8000a7c6, 0x800010c7, 0x800001ae, 0x8000002b};
+
 constexpr auto fractional_part_rounding_thresholds(int index) -> uint32_t {
   // For checking rounding thresholds.
   // The kth entry is chosen to be the smallest integer such that the
   // upper 32-bits of 10^(k+1) times it is strictly bigger than 5 * 10^k.
   // It is equal to ceil(2^31 + 2^32/10^(k + 1)).
-  // These are stored in a string literal because we cannot have static arrays
-  // in constexpr functions and non-static ones are poorly optimized.
-  return U"\x9999999a\x828f5c29\x80418938\x80068db9\x8000a7c6\x800010c7"
-         U"\x800001ae\x8000002b"[index];
+  return fractional_part_rounding_thresholds_data[index];
 }
 
 template <typename Float>
